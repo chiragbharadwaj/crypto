@@ -19,26 +19,22 @@ module FixedXOR : XOR = struct
 		| Zero -> 0
 		| One  -> 1
 
-	let bitxor ((b1, b2) : binary * binary) : binary =
-		let result =
-			match (b1, b2) with
-			| (Zero, _) -> b2
-			| (One, _) -> to_binary ( ( (to_decimal b2) + 1 ) mod 2 )
-			| _ -> failwith "27: This should not happen."
-		in
-			to_binary result
+	let bitxor ((b1, b2) : binary * binary) : int =
+		match (b1, b2) with
+		| (Zero, _) -> to_decimal b2                 (* 0 ^ B = B *)
+		| (One, _)  -> ( (to_decimal b2) + 1 ) mod 2 (* 1 ^ B = ~B = (B+1)%2 *)
 
-	let zero_pad (c_list : int list) : int list =
-		match List.length c_list with
-		| 1 -> 0 :: 0 :: 0 :: c_list
-		| 2 -> 0 :: 0 :: c_list
-		| 3 -> 0 :: c_list
-		| 4 -> c_list
-		| _ -> failwith "37: This should not happen."
+	let zero_pad (b_list : binary list) : binary list =
+		match List.length b_list with
+		| 1 -> Zero :: Zero :: Zero :: b_list
+		| 2 -> Zero :: Zero :: b_list
+		| 3 -> Zero :: b_list
+		| 4 -> b_list
+		| _ -> failwith "33: This should not happen."
 
-	let ungroup (c : char) : int list =
-		let rec bin (i : int) : int list =
-			if (i = i mod 2) then i :: [] else bin (i / 2) @ [(i mod 2)]
+	let ungroup (c : char) : binary list =
+		let rec bin (i : int) : binary list =
+			if (i = i mod 2) then (to_binary i) :: [] else bin (i / 2) @ [to_binary (i mod 2)]
 		in
 		let hex (ch : char) : int =	
 			match ch with
@@ -50,7 +46,7 @@ module FixedXOR : XOR = struct
 			| 'f' -> 15
 			| x when abs (Char.code x - Char.code '0') <= 9 ->
 				int_of_string (Char.escaped ch)
-			| _   -> failwith "53: This should not happen."
+			| _   -> failwith "49: This should not happen."
 		in
 			zero_pad (bin (hex c))
 
@@ -65,16 +61,16 @@ module FixedXOR : XOR = struct
 			| 14 -> 'e'
 			| 15 -> 'f'
 			| x when abs x <= 9 -> String.get (string_of_int x) 0
-			| _ -> failwith "68: This should not happen."
+			| _ -> failwith "64: This should not happen."
 		in
 			map_over num
 
-	let xor (s1 : string, s2 : string) : string =
+	let xor ((s1, s2) : string * string) : string =
 		if (String.length s1 = String.length s2)
 		then
 			(* (match 
 			) *)
 			failwith "LOL YOU SUCK."
-		else failwith "78: This should not happen."
+		else failwith "74: This should not happen."
 
 end
