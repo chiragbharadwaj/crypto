@@ -72,7 +72,7 @@ module SixtyFour : SIXTY_FOUR = struct
 				 	| 10 -> '+'
 				 	| 11 -> '/'
 				 	| x  -> String.get (string_of_int x) 0) (* Return as char *)
-			| _ -> failwith "72: This should not happen." (* 63/26 <= 2 *)
+			| _ -> failwith "75: This should not happen." (* 63/26 <= 2 *)
 		in List.map map_over [msb; lsb] (* Map to actual character literals. *)
 
 	(* [regroup_three c_list] regroups a character list by reversing the list
@@ -86,14 +86,14 @@ module SixtyFour : SIXTY_FOUR = struct
 			match c_list with
 			| [] -> []
 			| x1 :: x2 :: x3 :: rest -> (regroup rest) @ (x1 :: x2 :: x3 :: [])
-			| _ -> failwith "86: This should not happen."
+			| _ -> failwith "89: This should not happen."
 		in
 			match (List.length c_list) mod 3 with
 			| 0 -> regroup c_list
 			| 1 -> (regroup c_list) @ ((List.hd c_list) :: [])
 			| 2 ->
 			  (regroup c_list) @ ((List.hd c_list) :: (List.nth c_list 1) :: [])
-			| _ -> failwith "92: This should not happen." (* Base 3 math.*)
+			| _ -> failwith "96: This should not happen." (* Base 3 math.*)
 
 	(* [regroup_two c_list] regroups a character list by reversing the list
 	 *  while preserving the order within each block of two characters.
@@ -106,12 +106,12 @@ module SixtyFour : SIXTY_FOUR = struct
 			match c_list with
 			| [] -> []
 			| x1 :: x2 :: rest -> (regroup rest) @ (x1 :: x2 :: [])
-			| _ -> failwith "105: This should not happen."
+			| _ -> failwith "109: This should not happen."
 		in
 			match (List.length c_list) mod 2 with
 			| 0 -> regroup c_list
 			| 1 -> (regroup c_list) @ ((List.hd c_list) :: [])
-			| _ -> failwith "110: This should not happen." (* Base 2 math. *)
+			| _ -> failwith "114: This should not happen." (* Base 2 math. *)
 
 	(* [convert s] returns the string s in a base-64 representation of the same
 	 *  value. Requires: s is input as a base 16 number, i.e. it only contains
