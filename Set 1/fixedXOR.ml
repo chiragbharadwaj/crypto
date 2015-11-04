@@ -114,9 +114,9 @@ end
  *  command-line arguments an input that represents a hex string. *)
 let () =
 	let s  = Array.to_list Sys.argv in
-	(* try *)
+	try
 		let s1 = List.nth s 1 in
 		let s2 = List.nth s 2 in
 		print_string ("\n" ^ (FixedXOR.xor (s1, s2)) ^ "\n\n")
-	(* with *)
-		(* | _ -> print_string "Error: Bad input! Perhaps you made a typo?\n" *)
+	with
+		| _ -> print_string "Error: Bad input! Perhaps you made a typo?\n"
