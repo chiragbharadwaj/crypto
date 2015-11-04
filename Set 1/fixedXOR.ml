@@ -19,10 +19,10 @@ module FixedXOR : XOR = struct
 		| Zero -> 0
 		| One  -> 1
 
-	let bitxor ((b1, b2) : binary * binary) : int =
+	let bitxor ((b1, b2) : binary * binary) : binary =
 		match (b1, b2) with
-		| (Zero, _) -> to_decimal b2                 (* 0 ^ B = B *)
-		| (One, _)  -> ( (to_decimal b2) + 1 ) mod 2 (* 1 ^ B = ~B = (B+1)%2 *)
+		| (Zero, _) -> b2
+		| (One, _)  -> to_binary ( ( (to_decimal b2) + 1 ) mod 2 )
 
 	let zero_pad (b_list : binary list) : binary list =
 		match List.length b_list with
@@ -50,8 +50,8 @@ module FixedXOR : XOR = struct
 		in
 			zero_pad (bin (hex c))
 
-	let regroup (i_list : int list) : char =
-		let num = List.fold_left (fun acc x -> x + (2 * acc)) 0 i_list in
+	let regroup (b_list : binary list) : char =
+		let num = List.fold_left (fun acc x -> (to_decimal x) + (2 * acc)) 0 b_list in
 		let map_over (numerical : int) : char = (* Map to corresponding char *)
 			match numerical with
 			| 10 -> 'a'
@@ -65,12 +65,58 @@ module FixedXOR : XOR = struct
 		in
 			map_over num
 
-	let xor ((s1, s2) : string * string) : string =
-		if (String.length s1 = String.length s2)
-		then
-			(* (match 
-			) *)
-			failwith "LOL YOU SUCK."
-		else failwith "74: This should not happen."
+	(* [c ^^ s] returns a string in which the character c has been prepended to
+	 *  the string s.
+	 *
+	 *  - [c] is a character to be prepended to the string.
+ 	 *  - [s] is a string of characters.
+ 	 *)
+	let (^^) (c : char) (s : string) : string = (Char.escaped c) ^ s
 
+	(* [string_of_char c_list] returns a string created from concatenating all
+	 *  the characters in c_list together in order of appearance in the string.
+ 	 *
+ 	 *  - [c_list] is a list of characters to be strung together.
+ 	 *)
+	let string_of_char (c_list : char list) : string = 
+		List.fold_right (^^) c_list "" (* Makes concatenation much easier. *)
+
+	(* [char_of_string s] returns the string s as a list of characters in order
+	 *  of appearance in the string.
+	 *
+	 *  - [s] is a string to be converted to a list of characters in order.
+	 *)
+	let rec char_of_string (s : string) : char list =
+		let len = String.length s in 
+		match len with
+		| 0 -> [] (* A quick edge/base case in case "" is passed in. *)
+		| 1 -> (String.get s 0) :: [] (* Needed because sub from 1 undefined. *)
+		| _ -> (String.get s 0) :: char_of_string ( String.sub s 1 (len - 1) )
+
+	let xor ((s1, s2) : string * string) : string =
+		let bl1 = List.flatten (List.map ungroup (char_of_string s1)) in
+		let bl2 = List.flatten (List.map ungroup (char_of_string s2)) in
+		let b_list =
+			try List.fold_left2 (fun acc b1 b2 -> (acc @ [bitxor (b1, b2)])) [] bl1 bl2
+			with | _ -> failwith "101: This should not happen."
+		in (* List.fold_left2 will catch uneven-length error, thankfully! *)
+		let rec recover (bl : binary list) : char list =
+			match bl with
+			| [] -> []
+			| b1 :: b2 :: b3 :: b4 :: rest -> (regroup (b1 :: b2 :: b3 :: b4 :: [])) :: recover rest
+			| b1 :: b2 :: b3 :: [] as b -> (regroup (zero_pad b)) :: []
+			| b1 :: b2 :: [] as b -> (regroup (zero_pad b)) :: []
+			| b1 :: [] as b -> (regroup (zero_pad b)) :: []
+		in string_of_char (recover b_list)
 end
+
+(* Runs a command-line interface that prints out the base-64 string given via
+ *  command-line arguments an input that represents a hex string. *)
+let () =
+	let s  = Array.to_list Sys.argv in
+	(* try *)
+		let s1 = List.nth s 1 in
+		let s2 = List.nth s 2 in
+		print_string ("\n" ^ (FixedXOR.xor (s1, s2)) ^ "\n\n")
+	(* with *)
+		(* | _ -> print_string "Error: Bad input! Perhaps you made a typo?\n" *)

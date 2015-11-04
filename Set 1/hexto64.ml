@@ -15,11 +15,11 @@ end
  * functions are not seen from outside, and are not usable out of this scope. *)
 module SixtyFour : SIXTY_FOUR = struct
 
-	(* [s ^^ c] returns a string in which the character c has been prepended to
+	(* [c ^^ s] returns a string in which the character c has been prepended to
 	 *  the string s.
- 	 *
- 	 *  - [s] is a string of characters,
- 	 *  - [c] is a character to be prepended to the string.
+	 *
+	 *  - [c] is a character to be prepended to the string.
+ 	 *  - [s] is a string of characters.
  	 *)
 	let (^^) (c : char) (s : string) : string = (Char.escaped c) ^ s
 
