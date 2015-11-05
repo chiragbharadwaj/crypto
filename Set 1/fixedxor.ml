@@ -20,7 +20,8 @@ module FixedXOR : XOR = struct
 	type binary = Zero | One
 
 	(* [to_binary i] converts an integer i to its corresponding binary construct
-	 *  by invoking the constructor. Requires: i = 0 or i = 1.
+	 *  by invoking the constructor. Requires: i = 0 or i = 1. Throws an
+	 *  exception if i is not either 0 or 1.
 	 *
 	 *  - [i] is an integer representation of a binary number.
 	 *)
@@ -30,24 +31,52 @@ module FixedXOR : XOR = struct
 		| 1 -> One
 		| _ -> failwith "19: This should not happen." (* Not a binary number! *)
 
+	(* [to_decimal b] converts a binary encoding b to its corresponding integer
+	 *  value by reverse-matching the construct.
+	 *
+	 *  - [b] is a 1-bit binary encoding of an integer value.
+	 *)
 	let to_decimal (b : binary) : int =
 		match b with
 		| Zero -> 0
 		| One  -> 1
+		(* No edge cases, because b has only two variant values! *)
 
+	(* [bitxor (b1, b2)] computes the XOR of two 1-bit binary encodings b1 and
+	 *  b2, and outputs this value as a binary encoding as well.
+	 *
+	 *  - [b1] is a 1-bit binary encoding of an integer value.
+	 *  - [b2] is a 1-bit binary encoding of an integer value to be XORed with
+	 *         b1.
+	 *)
 	let bitxor ((b1, b2) : binary * binary) : binary =
 		match (b1, b2) with
 		| (Zero, _) -> b2
 		| (One, _)  -> to_binary ( ( (to_decimal b2) + 1 ) mod 2 )
 
+	(* [zero_pad b_list] pads the 4-bit binary encoding b_list (passed in as a
+	 *  list of binary encodings) with 0's in the MSBs if the encoded list is
+	 *  fewer than 4 bits in length. Throws an exception if b_list has more than
+	 *  4 elements. 
+	 *
+	 *  - [b_list] is the list encoding of a 4-bit binary number, to be padded.
+	 *             NOTE: [a; b; c; d] corresponds to the number abcd, NOT dcba.
+	 *)
 	let zero_pad (b_list : binary list) : binary list =
 		match List.length b_list with
+		| 0 -> []
 		| 1 -> Zero :: Zero :: Zero :: b_list
 		| 2 -> Zero :: Zero :: b_list
 		| 3 -> Zero :: b_list
 		| 4 -> b_list
 		| _ -> failwith "37: This should not happen."
 
+	(* [ungroup c] expands the hexadecimal character c to its corresponding 4-bit
+	 *  binary encoding, returned as a list. The result is zero-padded to 4 bits
+	 *  if it is necessary.
+	 *
+	 *  - [c] is a hexadecimal character to be expanded into a 4-bit encoding.
+	 *)
 	let ungroup (c : char) : binary list =
 		let rec bin (i : int) : binary list =
 			if (i = i mod 2) then (to_binary i) :: []
@@ -67,6 +96,11 @@ module FixedXOR : XOR = struct
 		in
 			zero_pad (bin (hex c))
 
+	(* [regroup b_list] regroups the 4-bit binary encoding b_list, passed in as
+	 *  a list, as a hexadecimal character.
+	 *
+	 *  - [b_list] is a list encoding of a 4-bit binary number.
+	 *)
 	let regroup (b_list : binary list) : char =
 		let num =
 			List.fold_left (fun acc x -> (to_decimal x) + (2 * acc)) 0 b_list in
@@ -123,17 +157,18 @@ module FixedXOR : XOR = struct
 		let b_list =
 			try List.fold_left2
 				(fun acc b1 b2 -> (acc @ [bitxor (b1, b2)]))[] bl1 bl2
+				(* XOR bit by bit, fold over list and create a new list! *)
 			with | _ -> failwith "106: This should not happen."
 		in (* List.fold_left2 will catch uneven-length error, thankfully! *)
 		let rec recover (bl : binary list) : char list =
 			match bl with
 			| [] -> []
-			| b1 :: b2 :: b3 :: b4 :: rest ->
+			| b1 :: b2 :: b3 :: b4 :: rest -> (* Regroup and recover. *)
 				(regroup (b1 :: b2 :: b3 :: b4 :: [])) :: recover rest
 			| b1 :: b2 :: b3 :: [] as b -> (regroup (zero_pad b)) :: []
 			| b1 :: b2 :: [] as b -> (regroup (zero_pad b)) :: []
 			| b1 :: [] as b -> (regroup (zero_pad b)) :: []
-		in string_of_char (recover b_list)
+		in string_of_char (recover b_list) (* Convert back to string at end. *)
 end
 
 (* Runs a command-line interface that prints out the base-64 string given via
@@ -142,7 +177,7 @@ let () =
 	let s  = Array.to_list Sys.argv in
 	try
 		let s1 = List.nth s 1 in
-		let s2 = List.nth s 2 in
+		let s2 = List.nth s 2 in (* Get both strings for computation. *)
 		print_string ("\n" ^ (FixedXOR.xor (s1, s2)) ^ "\n\n")
 	with
 		| _ -> print_string "Error: Bad input! Perhaps you made a typo?\n"
