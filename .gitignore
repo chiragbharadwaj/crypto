@@ -1,6 +1,18 @@
+/* Legacy CS 3110 files */
 _build/
 _cs3110/
+
+/* Mac operating system files */
 .DS_Store
-inline_tests.log
+
+/* IntelliJ files */
 *.iml
 .idea/
+build/
+out/
+
+/* Gradle files */
+.gradle/
+gradle/
+gradlew
+gradlew.bat
