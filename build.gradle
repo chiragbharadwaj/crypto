@@ -1,31 +1,40 @@
+// Build script for project.
 buildscript {
+  // Use the newest version of Kotlin available.
   ext.kotlin_version = '1.1.4-2'
 
+  // Read from Maven's central repository.
   repositories {
     mavenCentral()
   }
 
+  // Use the Gradle for Kotlin plugin for simplified access.
   dependencies {
     classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
   }
 }
 
+// The buildscript classpath dependency allows us to specify Kotlin.
 apply plugin: 'kotlin'
 
+// Dependencies used in our project: JRE 8 and JUnit are by default.
 dependencies {
   testCompile 'junit:junit:4.12'
   compile "org.jetbrains.kotlin:kotlin-stdlib-jre8:$kotlin_version"
 }
 
+// Non-standard project structure: Specify source and test directories.
 sourceSets {
   main.kotlin.srcDirs += 'src'
   test.kotlin.srcDirs += 'test'
 }
 
+// Again, read from Maven's central repository.
 repositories {
   mavenCentral()
 }
 
+// These two options allow us to compile Kotlin code to JVM 8 bytecode.
 compileKotlin {
   kotlinOptions {
     jvmTarget = "1.8"
