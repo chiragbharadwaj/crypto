@@ -4,7 +4,13 @@ package set1
  * representations in base-64. */
 object Hex {
 
+  /* <CharArray>.regroup(n) reverses the receiver object in groups/chunks of size [n]. That is, the entire receiver
+   *   object is reversed while keeping chunks of size n intact (counting from the back). For example, if n = 3, then
+   *   ['d','e','a','d','b','e','e'].regroup(3) would return ['e','d','b','e','d','e','a'].
+   * Requires: [n] >= 1.
+   * */
   private fun CharArray.regroup(n: Int): CharArray {
+    assert(n >= 1)
     // No need to do extra work if it's already that small.
     if (this.size < n) return this
 
@@ -32,6 +38,9 @@ object Hex {
     return chs
   }
 
+  /* <Char>.toDecimal() converts the receiver object to the equivalent integer.
+   * Requires: The receiver object must be input as a single base-16 number, i.e. it is either [0-9] or [a-f].
+   */
   private fun Char.toDecimal(): Int =
     when (this) {
       in '0'..'9' -> this - '0'
@@ -42,7 +51,14 @@ object Hex {
   private fun CharArray.toDecimal(): Int =
     this.fold(0) { acc, c -> 16 * acc + c.toDecimal() }
 
+  /* <CharArray>.chunkToSixtyFour() converts the receiver object from its hexadecimal representation to a base-64
+   *   representation by converting the three hexadecimal characters into two base-64 characters.
+   * Requires: The receiver object consists of at most three hexadecimal characters, i.e. between 000 and fff.
+   */
   private fun chunkToSixtyFour(chars: CharArray): CharArray {
+    /* intToChar(num) converts [num] to its base-64 character representation.
+     * Requires: 0 <= [num] <= 63.
+     */
     fun intToChar(num: Int): Char {
       val mod = num % 26
       return when (num / 26) {
@@ -53,7 +69,7 @@ object Hex {
           11 -> '/'
           else -> mod.toString()[0] // Another hack based on the representation.
         }
-        else -> throw IllegalStateException("$num is greater than 63 in base-64!")
+        else -> throw IllegalStateException("$num is greater than 63 in base-64!") // Even 63/26 = 2
       }.toChar()
     }
     val dec = chars.toDecimal()
@@ -64,6 +80,10 @@ object Hex {
            .toCharArray()
   }
 
+  /* <CharArray>.toSixtyFour() converts the receiver object from its hexadecimal representation to a base-64
+   *   representation by converting each chunk of three hexadecimal characters into two base-64 characters.
+   * Requires: The receiver object consists of only hexadecimal characters, i.e. [0-9] and [a-f] as constituents.
+   */
   private fun CharArray.toSixtyFour(): CharArray {
     val numGroups = this.size / 3
     val chs = CharArray(2 * numGroups)
@@ -79,12 +99,10 @@ object Hex {
   }
 
   /* convert(hex) returns the string [hex] in a base-64 representation of itself.
-   * Requires: [hex] is input as a base-16 number, i.e. it only contains [0-9]
-   *   and [a-f] as constituent characters.
+   * Requires: [hex] is input as a base-16 number, i.e. it only contains [0-9] and [a-f] as constituent characters.
    */
   fun convert(hex: String): String {
-    return hex
-           .toCharArray()
+    return hex.toCharArray()
            .regroup(3)
            .toSixtyFour()
            .regroup(2)
