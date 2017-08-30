@@ -3,8 +3,8 @@ package test
 import org.junit.Test
 import org.junit.Assert.*
 
-import set1.Hex
-import set1.FixedXor
+import set1.hex.Hex
+import set1.xor.FixedXor
 
 /* Set 1: The basics of cryptography. */
 class Basics {

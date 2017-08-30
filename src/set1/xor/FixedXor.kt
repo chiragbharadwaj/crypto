@@ -1,16 +1,6 @@
-package set1
+package set1.xor
 
-import set1.Bit.*
-
-/* Abstract representation of a bit. Uses only constants with no assigned values (slightly more annoying conversion). */
-private enum class Bit { ZERO, ONE }
-
-/* Overrides the ! operator for bits. !ZERO = ONE and !ONE = ZERO. Purely syntactic sugar. */
-private operator fun Bit.not() =
-  when (this) {
-    ZERO -> ONE
-    ONE  -> ZERO
-  }
+import set1.xor.Bit.*
 
 /* Set 1, Challenge 2. XOR together two strings represented in hex, bitwise, and return the resulting hex string. */
 object FixedXor {
@@ -32,7 +22,7 @@ object FixedXor {
     }
 
   /* bitXor((b1,b2)) returns the bitwise XOR of bits [b1] and [b2] as a bit. Optimized. */
-  private fun bitXor(p: Pair<Bit,Bit>): Bit =
+  private fun bitXor(p: Pair<Bit, Bit>): Bit =
     when (p.first) {
       ZERO ->  p.second
       ONE  -> !p.second

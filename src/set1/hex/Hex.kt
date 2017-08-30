@@ -1,4 +1,4 @@
-package set1
+package set1.hex
 
 /* Set 1, Challenge 1. Convert strings represented in hex to their equivalent representations in base-64. */
 object Hex {
