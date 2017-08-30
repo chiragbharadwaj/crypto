@@ -1,6 +1,8 @@
 # Cryptography
 This repository contains [problems](http://cryptopals.com/) in cryptography that I'm attempting to solve to further my knowledge of the subject. All solutions are in `Kotlin`, a programming language on the JVM with functional features. I previously solved some of these problems in `OCaml`, a functional programming language; this earlier approach can be found in the archive folder.
 
+All problems are solved without the use of third-party libraries; that is, only the standard `Kotlin` and `Java` libraries are used in the algorithms. This out-of-the-box approach means that anyone should be able to run the code with just a working `Kotlin` and JDK installation.
+
 My approach to cryptography is based on the Cryptopals cryptography questions, which in turn are based on the Matasano cryptography problems. I hope to get through Set 8 eventually. The topics that these problems broadly cover include, but are not limited to:
 
  * Basics (XOR, conversions, etc.)
