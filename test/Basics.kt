@@ -5,6 +5,7 @@ import org.junit.Assert.*
 
 import set1.hex.Hex
 import set1.xor.FixedXor
+import set1.xor.SingleXor
 
 /* Set 1: The basics of cryptography. */
 class Basics {
@@ -26,5 +27,16 @@ class Basics {
     val expected = "746865206b696420646f6e277420706c6179"
     val actual   = FixedXor.join(string1, string2)
     assertEquals(expected, actual)
+  }
+
+  // Challenge 3: Plain text has been XOR-ciphered with a single ASCII character. Recover both the cipher key and plain text.
+  @Test
+  fun testSingleXor() {
+    val cipherText = "1b37373331363f78151b7f2b783431333d78397828372d363c78373e783a393b3736"
+    val expectedKey = 'X'
+    val expectedPlainText = "Cooking MC's like a pound of bacon"
+    val (actualKey, actualPlainText) = SingleXor.decrypt(cipherText)
+    assertEquals(expectedKey, actualKey)
+    assertEquals(expectedPlainText, actualPlainText)
   }
 }
