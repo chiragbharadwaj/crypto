@@ -16,7 +16,7 @@ object RepeatXor {
     val msg = str.toHex()
     val key = cipher.toHex()
     val numSequences = str.length / cipher.length
-    val remainder = (str.length % cipher.length) * 2
+    val remainder = (str.length % cipher.length) * 2 // Because each ASCII character is 2 hex characters.
     val cipherKey = key.repeat(numSequences) + if (remainder != 0) key.slice(0 until remainder) else ""
     return FixedXor.join(msg, cipherKey)
   }
