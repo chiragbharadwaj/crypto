@@ -7,6 +7,7 @@ import set1.hex.Hex
 import set1.xor.FixedXor
 import set1.xor.SingleXor
 import set1.xor.DetectXor
+import set1.xor.RepeatXor
 
 /* Set 1: The basics of cryptography. */
 class Basics {
@@ -48,5 +49,16 @@ class Basics {
     val expectedPlainText = "Now that the party is jumping\n"
     val actualPlainText = DetectXor.detect(file)
     assertEquals(expectedPlainText, actualPlainText)
+  }
+
+  // Challenge 5: Encipher plain text using XOR-ciphering with repeating blocks of multiple-character ASCII text.
+  @Test
+  fun testRepeatXor() {
+    val msg = "Burning 'em, if you ain't quick and nimble\n" +
+              "I go crazy when I hear a cymbal"
+    val expectedCipherText = "0b3637272a2b2e63622c2e69692a23693a2a3c6324202d623d63343c2a26226324272765272" +
+                             "a282b2f20430a652e2c652a3124333a653e2b2027630c692b20283165286326302e27282f"
+    val actualCipherText = RepeatXor.encrypt(msg, "ICE")
+    assertEquals(expectedCipherText, actualCipherText)
   }
 }
