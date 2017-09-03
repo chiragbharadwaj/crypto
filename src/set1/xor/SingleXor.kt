@@ -8,7 +8,7 @@ object SingleXor {
   /* <String>.score() "scores" the receiver object, so to speak, using " ETAOINSHRDLU" as the weights, in that decreasing
    *   order of importance. The frequency analysis on these characters alone should be enough to crack simple ciphers.
    */
-  private fun String.score(): Int =
+  fun String.score(): Int =
     COMMON_LETTERS.withIndex().fold(0, { acc, (i, ch) -> acc + (26 - i) * this.count { it == ch } })
 
   /* <String>.toAscii() converts the receiver object from a hexadecimal representation to the equivalent ASCII (7-bit)
@@ -40,9 +40,9 @@ object SingleXor {
 
     for (k in keys) {
       var len = if (k < 16) msg.length else msg.length / 2
-      val kei = k.toString(16).repeat(len)  // Create a repeating form of the byte payload as a cipher key.
+      val kei = k.toString(16).repeat(len) // Create a repeating form of the byte payload as a cipher key.
       val str = FixedXor.join(msg, kei).toAscii() // XOR the cipher key and cipher text and observe the result in ASCII.
-      val score = str.score()                     // Score the resulting plain text.
+      val score = str.score() // Score the resulting plain text.
       if (score > max) {
         max = score
         key = k.toChar()

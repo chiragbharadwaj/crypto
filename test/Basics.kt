@@ -6,11 +6,12 @@ import org.junit.Assert.*
 import set1.hex.Hex
 import set1.xor.FixedXor
 import set1.xor.SingleXor
+import set1.xor.DetectXor
 
 /* Set 1: The basics of cryptography. */
 class Basics {
 
-  // Challenge 1: Converting hex strings into their base-64 equivalents.
+  // Challenge 1: Convert a hex string into its base-64 equivalent.
   @Test
   fun testHex() {
     val original = "49276d206b696c6c696e6720796f757220627261696e206c696b65206120706f69736f6e6f7573206d757368726f6f6d"
@@ -37,6 +38,15 @@ class Basics {
     val expectedPlainText = "Cooking MC's like a pound of bacon"
     val (actualKey, actualPlainText) = SingleXor.decrypt(cipherText)
     assertEquals(expectedKey, actualKey)
+    assertEquals(expectedPlainText, actualPlainText)
+  }
+
+  // Challenge 4: A file of 327 strings is provided. Exactly one has been single-character XOR-ciphered. Find it.
+  @Test
+  fun testDetectXor() {
+    val file = "src/set1/data/detectXor.txt"
+    val expectedPlainText = "Now that the party is jumping\n"
+    val actualPlainText = DetectXor.detect(file)
     assertEquals(expectedPlainText, actualPlainText)
   }
 }
