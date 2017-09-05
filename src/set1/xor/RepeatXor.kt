@@ -86,12 +86,16 @@ object RepeatXor {
     val distances = HashMap<Int,Double>()
 
     // Loop through all of the possible key sizes and find the one that has the minimum Hamming distance group metric.
-    // TODO: Fix this.
-    for (keySize in keySizes) {
-      val firstChunk  = msg.slice(0 until keySize)
-      val secondChunk = msg.slice(keySize until 2 * keySize)
-      val normalizedDistance = hamming(firstChunk, secondChunk) / keySize.toDouble()
-      distances.put(keySize, normalizedDistance)
+    for (size in keySizes) {
+      var sum = 0
+      // Comparing/averaging ten blocks in their relative orders. Just once is insufficient!
+      for (n in 0 until 10) {
+        val firstChunk  = msg.slice(size * n until size * n + size)
+        val secondChunk = msg.slice(size * n + size until size * n + 2 * size)
+        sum += hamming(firstChunk, secondChunk)
+      }
+      val normalizedDistance = sum / size.toDouble()
+      distances.put(size, normalizedDistance)
     }
 
     // Find the ideal key size and then pad the string so that it has a multiple of this many characters.
