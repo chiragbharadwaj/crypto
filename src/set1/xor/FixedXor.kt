@@ -46,7 +46,7 @@ object FixedXor {
    */
   private fun expand(ch: Char): Array<Bit> {
     /* <Char>.toInteger() converts the receiver object into the equivalent integer representation.
-     * Requires: The receiver object must be input as a single base-16 character, i.e. it is either ['0'-'9'] or ['a'-'f'].
+     * Requires: The receiver object must be input as a single base-16 character, i.e. it is either [0-9] or [a-f].
      */
     fun Char.toInteger(): Int =
       when (this) {

@@ -9,6 +9,7 @@ import set1.xor.SingleXor.toAscii
  */
 object RepeatXor {
 
+  /* The maximum size of the keys that we want to check up to. */
   private const val MAX_KEY_SIZE = 40
 
   /* <String>.toHex() converts the receiver object from an ASCII representation to the equivalent hex representation.
@@ -17,8 +18,51 @@ object RepeatXor {
   private fun String.toHex(): String =
     this.map { "%02x".format(it.toInt()) }.joinToString("")
 
+  /* <String>.standardize() converts the receiver object from a base-64 representation to the equivalent ASCII representation.
+   * Requires: The receiver object is a base-64-encoded string.
+   */
   private fun String.standardize(): String =
-    Hex.unconvert(this.filter { it != '\n' }).toAscii()
+    Hex.unconvert(this.filter { it != '\n' }).toAscii() // Newlines stripped due to initial format in data file.
+
+  /* <Char>.toBinary() converts the receiver object from a hexadecimal representation to the equivalent binary.
+   * Requires: The receiver object must be input as a single base-16 character, i.e. it is either [0-9] or [a-f]. */
+  private fun Char.toBinary(): String =
+    when (this) {
+      in '0'..'9' -> this - '0'
+      in 'a'..'f' -> this - 'a' + 10
+      else -> throw IllegalArgumentException("$this is not a valid hex character!")
+    }.toString(2)
+
+  /* String.toBinary() converts the receiver object into the equivalent binary via base arithmetic on each hex input
+   *   character from right-to-left.
+   * Requires: The receiver object consists of only hexadecimal characters, i.e. only [0-9] and [a-f] as constituents.
+   */
+  private fun String.toBinary(): String =
+    this.fold("", { acc, ch -> acc + ch.toBinary() })
+
+  /* hamming(s1,s2) computes the Hamming distance between the input strings [s1] and [s2].
+   * Requires: [s1] and [s2] consist of only ASCII-encoded (7-bit) characters.  They must also be of equal length.
+   */
+  private fun hamming(s1: String, s2: String): Int {
+    if (s1.length != s2.length) throw IllegalArgumentException("Mismatch: s1.length: ${s1.length} != s2.length: ${s2.length}.")
+    val str1 = s1.toHex()
+    val str2 = s2.toHex()
+    return FixedXor.join(str1, str2).toBinary().fold(0, { acc, ch -> acc + ch.toString().toInt() })
+  }
+
+  /* transpose(blocks) interchanges the columns and rows of the provided list of lists (Partition: just a view).
+   * Requires: [blocks] is rectangular; that is, every sublist within the list is of the same size.
+   */
+  private fun <T> transpose(blocks: List<List<T>>): List<List<T>> {
+    if (blocks.isEmpty()) return blocks
+
+    val width = blocks.first().size
+    if (blocks.any{ it.size != width }) {
+      throw IllegalStateException("The specified list of lists is not rectangular! Some sublists are of uneven length.")
+    }
+
+    return (0 until width).map { col -> (0 until blocks.size).map { row -> blocks[row][col] } }
+  }
 
   /* encrypt(str, cipher) encrypts the plain text [str] by using [cipher] as a repeating cipher key.
    * Requires: [str] and [cipher] are ASCII-encoded (7-bit) strings.
@@ -32,53 +76,26 @@ object RepeatXor {
     return FixedXor.join(msg, cipherKey)
   }
 
-  private fun Char.toBinary(): String =
-    when (this) {
-      in '0'..'9' -> this - '0'
-      in 'a'..'f' -> this - 'a' + 10
-      else -> throw IllegalArgumentException("$this is not a valid hex character!")
-    }.toString(2)
-
-  private fun String.toBinary(): String =
-    this.fold("", { acc, ch -> acc + ch.toBinary() })
-
-  private fun hammingDistance(s1: String, s2: String): Int {
-    val str1 = s1.toHex()
-    val str2 = s2.toHex()
-    return FixedXor.join(str1, str2).toBinary().fold(0, { acc, ch -> acc + ch.toString().toInt() })
-  }
-
-  private fun <T> transpose(blocks: List<List<T>>): List<List<T>> {
-    if (blocks.isEmpty()) return blocks
-
-    val width = blocks.first().size
-    if (blocks.any{ it.size != width }) {
-      throw IllegalStateException("The specified list of lists is not rectangular! Some sublists are of uneven length.")
-    }
-
-    return (0 until width).map { col -> (0 until blocks.size).map { row -> blocks[row][col] } }
-  }
-
   /* decrypt(str) decrypts the cipher text [str] by using a statistical algorithm to determine the most-likely cipher
    *   key and then undoing the encryption process via a second repeating-block XOR pass. Returns the key and plain text.
    * Requires: [str] is a base-64 string.
    */
   fun decrypt(str: String): Pair<String,String> {
     val msg = str.standardize()
-    val keySizes  = Array(MAX_KEY_SIZE, { it + 1 })
+    val keySizes  = Array(MAX_KEY_SIZE, { it + 1 }) // An array of all the key sizes, from 1 to MAX_KEY_SIZE.
     val distances = HashMap<Int,Double>()
 
     // Loop through all of the possible key sizes and find the one that has the minimum Hamming distance group metric.
+    // TODO: Fix this.
     for (keySize in keySizes) {
       val firstChunk  = msg.slice(0 until keySize)
       val secondChunk = msg.slice(keySize until 2 * keySize)
-      val normalizedDistance = hammingDistance(firstChunk, secondChunk) / keySize.toDouble()
+      val normalizedDistance = hamming(firstChunk, secondChunk) / keySize.toDouble()
       distances.put(keySize, normalizedDistance)
     }
 
-    // Find the ideal key size and then pad the string so that it has a multiple of this many characters. TODO: FIX.
-    /* val keySize = distances.minBy { (_,v) -> v }!!.key */
-    val keySize = 29
+    // Find the ideal key size and then pad the string so that it has a multiple of this many characters.
+    val keySize = distances.minBy { (_,v) -> v }!!.key
     var lst = msg.toList()
     lst += List(keySize - (lst.size % keySize), { '\u0000' })
 
