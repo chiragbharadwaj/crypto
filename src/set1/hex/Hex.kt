@@ -8,7 +8,8 @@ object Hex {
    * Requires: [n] >= 1.
    * */
   private fun CharArray.regroup(n: Int): CharArray {
-    assert(n >= 1)
+    if (n < 1) throw IllegalArgumentException("$n is not greater than or equal to 1!")
+
     // No need to do extra work if it's already that small.
     if (this.size < n) return this
 
@@ -43,7 +44,7 @@ object Hex {
     when (this) {
       in '0'..'9' -> this - '0'
       in 'a'..'f' -> this - 'a' + 10
-      else -> throw IllegalArgumentException("$this is not a valid hex character.")
+      else -> throw IllegalArgumentException("$this is not a valid hex character!")
     }
 
   /* <Char[]>.toDecimal() converts the receiver object into the equivalent integer via base arithmetic on each hex

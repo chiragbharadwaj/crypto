@@ -82,7 +82,7 @@ object FixedXor {
    *   hex strings must also be of equal length.
    */
   fun join(s1: String, s2: String): String {
-    assert(s1.length == s2.length)
+    if (s1.length != s2.length) throw IllegalArgumentException("Mismatch: s1.length: ${s1.length} != s2.length: ${s2.length}.")
 
     // Expand the strings to binary numbers and XOR them together.
     val bits1 = s1.toCharArray().map(this::expand).toTypedArray().flatten()
