@@ -54,6 +54,20 @@ object Hex {
   private fun CharArray.toDecimal(): Int =
     this.fold(0) { acc, c -> 16 * acc + c.toDecimal() }
 
+  private fun Char.toDec(): Int =
+    when (this) {
+      in 'A'..'Z' -> this - 'A'
+      in 'a'..'z' -> this - 'a' + 26
+      in '0'..'9' -> this - '0' + 52
+              '+' -> 62
+              '/' -> 63
+              '=' -> 0 // Special character used for padding in base-64, apparently.
+      else -> throw IllegalArgumentException("$this is not a valid base-64 character!")
+    }
+
+  private fun CharArray.toDec(): Int =
+    this.fold(0) { acc, c -> 64 * acc + c.toDec() }
+
   /* <Char[]>.chunkToSixtyFour() converts the receiver object from its hexadecimal representation to a base-64
    *   representation by converting the three hexadecimal characters into two base-64 characters.
    * Requires: The receiver object consists of at most three hexadecimal characters, i.e. between 000 and fff.
@@ -75,11 +89,29 @@ object Hex {
         else -> throw IllegalStateException("$num is greater than 63 in base-64!") // Even 63/26 = 2
       }.toChar()
     }
+
     val dec = chars.toDecimal()
     val msb = dec / 64
-    val lsb = dec - (msb) * 64
+    val lsb = dec - (64 * msb)
     return intArrayOf(msb,lsb)
            .map(::intToChar)
+           .toCharArray()
+  }
+
+  private fun chunkToHex(chars: CharArray): CharArray {
+    fun toHex(num: Int): Char =
+      when (num) {
+        in 0..9   -> '0' + num
+        in 10..15 -> 'a' + num - 10
+        else -> throw IllegalArgumentException("$num is not an integer between 0 and 15.")
+      }
+
+    val dec = chars.toDec()
+    val msb = dec / 256
+    val sb  = (dec - (256 * msb)) / 16
+    val lsb = dec - (256 * msb) - (16 * sb)
+    return intArrayOf(msb,sb,lsb)
+           .map(::toHex)
            .toCharArray()
   }
 
@@ -101,6 +133,21 @@ object Hex {
     return chs + if (this.size % 3 != 0) convertedChs else CharArray(0)
   }
 
+  private fun CharArray.toHex(): CharArray {
+    val numGroups = this.size / 2
+    val chs = CharArray(3 * numGroups)
+    for (i in 0 until numGroups) {
+      val sub = this.slice(2 * i until 2 * i + 2).toCharArray()
+      val convertedChs = chunkToHex(sub)
+      chs[3*i]   = convertedChs[0]
+      chs[3*i+1] = convertedChs[1]
+      chs[3*i+2] = convertedChs[2]
+    }
+    val last = this.slice(2 * numGroups until this.size).toCharArray()
+    val convertedChs = chunkToHex(last)
+    return chs + if (this.size % 2 != 0) convertedChs else CharArray(0)
+  }
+
   /* convert(hex) returns the string [hex] in a base-64 representation of itself.
    * Requires: [hex] consists of only hexadecimal characters, i.e. only [0-9] and [a-f] as constituents.
    */
@@ -110,6 +157,15 @@ object Hex {
            .regroup(3)
            .toSixtyFour()
            .regroup(2)
+           .joinToString("")
+  }
+
+  fun unconvert(base: String): String {
+    return base
+           .toCharArray()
+           .regroup(2)
+           .toHex()
+           .regroup(3)
            .joinToString("")
   }
 }

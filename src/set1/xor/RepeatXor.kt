@@ -1,5 +1,6 @@
 package set1.xor
 
+import set1.hex.Hex
 import set1.xor.SingleXor.toAscii
 
 /* Set 1, Challenge 5: Encrypt some plain text by using a repeating block in an XOR cipher. A little harder than just
@@ -15,6 +16,9 @@ object RepeatXor {
    */
   private fun String.toHex(): String =
     this.map { "%02x".format(it.toInt()) }.joinToString("")
+
+  private fun String.standardize(): String =
+    Hex.unconvert(this.filter { it != '\n' }).toAscii()
 
   /* encrypt(str, cipher) encrypts the plain text [str] by using [cipher] as a repeating cipher key.
    * Requires: [str] and [cipher] are ASCII-encoded (7-bit) strings.
@@ -60,38 +64,52 @@ object RepeatXor {
    * Requires: [str] is a base-64 string.
    */
   fun decrypt(str: String): Pair<String,String> {
+    val msg = str.standardize()
     val keySizes  = Array(MAX_KEY_SIZE, { it + 1 })
     val distances = HashMap<Int,Double>()
 
+    // Loop through all of the possible key sizes and find the one that has the minimum Hamming distance group metric.
     for (keySize in keySizes) {
-      val firstChunk  = str.slice(0 until keySize)
-      val secondChunk = str.slice(keySize until 2 * keySize)
+      val firstChunk  = msg.slice(0 until keySize)
+      val secondChunk = msg.slice(keySize until 2 * keySize)
       val normalizedDistance = hammingDistance(firstChunk, secondChunk) / keySize.toDouble()
       distances.put(keySize, normalizedDistance)
     }
 
-//    val keySize = distances.minBy { (_,v) -> v }!!.key // Most likely the key size, since smallest normalized distance.
+    // Find the ideal key size and then pad the string so that it has a multiple of this many characters. TODO: FIX.
+    /* val keySize = distances.minBy { (_,v) -> v }!!.key // Most likely the key size, since smallest normalized distance. */
     val keySize = 29
-    var lst = str.toList()
-    lst += List(1 + lst.size % keySize, { '\u0000' })
+    var lst = msg.toList()
+    lst += List(keySize - (lst.size % keySize), { '\u0000' })
+
+    // Split the string into chunks of the ideal size, and then transpose them.
     val blocks = Partition(lst, keySize)
     val transposedBlocks = transpose(blocks)
 
-    val key = transposedBlocks.fold("", { acc, b -> acc + SingleXor.decrypt(b.filter { it != '\u0000' }.joinToString("").toHex()).first })
-    val msg = encrypt(str, key).toAscii()
-    return Pair(key, msg)
+    // Finally, get the key from the transposed blocks via single-byte XOR recombination. Use it to recover the message.
+    val key = transposedBlocks.fold("", { acc, b -> acc + SingleXor.decrypt(b.filter{ it != '\u0000' }.joinToString("").toHex()).first })
+    val text = encrypt(msg, key).toAscii()
+    val plainText = if (str.contains('=')) text.substring(0 until text.length - 2) else text // Strip last 2 chars.
+    
+    return Pair(key, plainText)
   }
 }
 
-// Shamelessly stolen from Google Guava
+/* A Partition<T> is a view of a list that appears as if it has been broken into partitions of equal size. The list and
+ *   the size of each "chunk" is specified in the constructor. Since Partitions are immutable, providing a lookup-based
+ *   view saves space in memory by not actually creating a partition.
+ *
+ * Based on a Lists collection implementation provided by Google Guava. 
+ */
 private class Partition<out T>(private val list: List<T>, private val chunkSize: Int): AbstractList<List<T>>() {
   override val size = (list.size + chunkSize - 1) / chunkSize // Should mostly avoid overflow.
 
+  @Override
   override fun get(index: Int): List<T> {
     if (index < 0 || index >= size) throw IndexOutOfBoundsException("Out of range: index: $index, size: $size.")
 
     val start = index * chunkSize
     val end = Math.min(start + chunkSize, list.size)
-    return list.subList(start, end)
+    return list.subList(start, end) // Provides a view by doing this look-up every time. Slower but space-efficient.
   }
 }
