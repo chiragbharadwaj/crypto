@@ -77,17 +77,17 @@ object RepeatXor {
     }
 
     // Find the ideal key size and then pad the string so that it has a multiple of this many characters. TODO: FIX.
-    /* val keySize = distances.minBy { (_,v) -> v }!!.key // Most likely the key size, since smallest normalized distance. */
+    /* val keySize = distances.minBy { (_,v) -> v }!!.key */
     val keySize = 29
     var lst = msg.toList()
     lst += List(keySize - (lst.size % keySize), { '\u0000' })
 
     // Split the string into chunks of the ideal size, and then transpose them.
     val blocks = Partition(lst, keySize)
-    val transposedBlocks = transpose(blocks)
+    val blockT = transpose(blocks)
 
     // Finally, get the key from the transposed blocks via single-byte XOR recombination. Use it to recover the message.
-    val key = transposedBlocks.fold("", { acc, b -> acc + SingleXor.decrypt(b.filter{ it != '\u0000' }.joinToString("").toHex()).first })
+    val key = blockT.fold("", { acc, b -> acc + SingleXor.decrypt(b.filter{ it != '\u0000' }.joinToString("").toHex()).first })
     val text = encrypt(msg, key).toAscii()
     val plainText = if (str.contains('=')) text.substring(0 until text.length - 2) else text // Strip last 2 chars.
     

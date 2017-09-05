@@ -47,13 +47,16 @@ object Hex {
       else -> throw IllegalArgumentException("$this is not a valid hex character!")
     }
 
-  /* <Char[]>.toDecimal() converts the receiver object into the equivalent integer via base arithmetic on each hex
-   *   input character from right-to-left.
+  /* <Char[]>.toDecimal() converts the receiver object into the equivalent integer via base arithmetic on each hex input
+   *   character from right-to-left.
    * Requires: The receiver object consists of only hexadecimal characters, i.e. only [0-9] and [a-f] as constituents.
    */
   private fun CharArray.toDecimal(): Int =
     this.fold(0) { acc, c -> 16 * acc + c.toDecimal() }
 
+  /* <Char>.toDec() converts the receiver object to the equivalent integer.
+   * Requires: The receiver object must be input as a single base-64 number, i.e. it is either [0-9],[a-z],[A-Z], or [+,/].
+   */
   private fun Char.toDec(): Int =
     when (this) {
       in 'A'..'Z' -> this - 'A'
@@ -65,6 +68,10 @@ object Hex {
       else -> throw IllegalArgumentException("$this is not a valid base-64 character!")
     }
 
+  /* <Char[]>.toDec() converts the receiver object into the equivalent integer via base arithmetic on each base-64 input
+   *   character from right-to-left.
+   * Requires: The receiver object consists of only base-64 characters, i.e. only [0-9],[a-z],[A-Z], and [+,/] as constituents.
+   */
   private fun CharArray.toDec(): Int =
     this.fold(0) { acc, c -> 64 * acc + c.toDec() }
 
@@ -86,7 +93,7 @@ object Hex {
                11 -> '/'
                else -> mod.toString()[0] // Another hack based on the representation.
              }
-        else -> throw IllegalStateException("$num is greater than 63 in base-64!") // Even 63/26 = 2
+        else -> throw IllegalStateException("$num is greater than 63 in base-64!") // Even 63/26 = 2.
       }.toChar()
     }
 
@@ -98,7 +105,14 @@ object Hex {
            .toCharArray()
   }
 
+  /* <Char[]>.chunkToHex() converts the receiver object from its base-64 representation to a hexadecimal representation
+   *   by converting the two base-64 characters into three hexadecimal characters.
+   * Requires: The receiver object consists of at most two base-64 characters, i.e. between 00 and //.
+   */
   private fun chunkToHex(chars: CharArray): CharArray {
+    /* toHex(num) converts [num] to its hex character representation.
+     * Requires: 0 <= [num] <= 15.
+     */
     fun toHex(num: Int): Char =
       when (num) {
         in 0..9   -> '0' + num
@@ -133,6 +147,10 @@ object Hex {
     return chs + if (this.size % 3 != 0) convertedChs else CharArray(0)
   }
 
+  /* <Char[]>.toHex() converts the receiver object from its base-64 representation to a hexadecimal representation by
+   *   converting each chunk of two base-64 characters into three hexadecimal characters.
+   * Requires: The receiver object consists of only base-64 characters, i.e. only [0-9],[a-z],[A-Z], and [+,/] as constituents.
+   */
   private fun CharArray.toHex(): CharArray {
     val numGroups = this.size / 2
     val chs = CharArray(3 * numGroups)
@@ -145,7 +163,7 @@ object Hex {
     }
     val last = this.slice(2 * numGroups until this.size).toCharArray()
     val convertedChs = chunkToHex(last)
-    return chs + if (this.size % 2 != 0) convertedChs else CharArray(0)
+    return chs + if (this.size % 2 != 0) convertedChs else CharArray(0) // Parallel behavior to above.
   }
 
   /* convert(hex) returns the string [hex] in a base-64 representation of itself.
@@ -160,12 +178,15 @@ object Hex {
            .joinToString("")
   }
 
+  /* unconvert(base) returns the string [base] in a hexadecimal representation of itself.
+   * Requires: [base] consists of only base-64 characters, i.e. only [0-9],[a-z],[A-Z], and [+,/] as constituents.
+   */
   fun unconvert(base: String): String {
     return base
            .toCharArray()
            .regroup(2)
            .toHex()
            .regroup(3)
-           .joinToString("")
+           .joinToString("") // Exactly the opposite process as convert(hex).
   }
 }
